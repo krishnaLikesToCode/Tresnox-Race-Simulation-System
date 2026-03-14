@@ -2,9 +2,13 @@ from tkinter import *
 from tkinter import ttk
 from turtle import *  
 from turtle import RawTurtle, TurtleScreen
-root=Tk()
-root.title("TRESNOX RACE SIMULATION SYSTEM (TRSS)")
+import tkinter.font as tkFont
 
+#print("Please note that time powered is typically 450ms for FiS and STEM RACING")
+root=Tk()
+root.title("RACE SIMULATION SYSTEM (RSS)")
+default_font=tkFont.nametofont("TkDefaultFont")
+default_font.configure(family="Orbitron ExtraBold")
 
 turtleCanvas = Canvas(root, width=200, height=200,bg="grey")
 turtleCanvas1 = Canvas(root, width=200, height=200, bg='grey')
@@ -12,8 +16,10 @@ turtleCanvas.grid(row=0, column=1, rowspan=6, padx=5)
 turtleCanvas1.grid(row=0, column=1, rowspan=6,columnspan=2,sticky="se",padx=80)
 dtScreen = TurtleScreen(turtleCanvas)
 dtScreen.bgcolor('#F0F0F0')
+dtScreen.tracer(0)
 vtScreen = TurtleScreen(turtleCanvas1)
 vtScreen.bgcolor('#F0F0F0')
+vtScreen.tracer(0)
 
 
 speeds=[1,0]
@@ -25,7 +31,8 @@ coolTable.heading("2",text="Distances (m)")
 coolTable.heading("3",text="Velocities (m/s)")
 
 def calcDrag(fArea,cDrag,speed):
-    return (1/2)*1.225*(fArea)*(cDrag)*(speed**2)+0.037# air res and wheel friction
+    assumedFriction=0.17 # air res and wheel friction, on the higher side for safety
+    return (1/2)*1.225*(fArea)*(cDrag)*(speed**2)+assumedFriction
     
 
 def findSpeedWhilePowered(fArea,cDrag,mass,timePowered):
@@ -57,21 +64,18 @@ def findSpeedWhilePowered(fArea,cDrag,mass,timePowered):
     return 0 
 
 def forceAtTime(ms):
-    t = ms / 1000  # convert ms to seconds
-    
-    if t < 0:
+    t = ms / 1000
+
+    if t < 0 or t > 0.42:
         return 0
-    elif t > 0.5:
-        return 0
-    
-    # Rise phase: 0 to 0.07s - rapid ramp up
-    if t <= 0.07:
-        # Quick rise with slight curve, peaks at ~9.5N
-        return 9.5 * (t / 0.07) ** 0.6
+
+    # Slower rise, peaks at ~0.09s at 7.6N
+    if t <= 0.09:
+        return 7.6 * (t / 0.09) ** 0.75
     else:
-        # Decay phase: 0.07s to 0.5s - gradual curved falloff
-        decay = (t - 0.07) / (0.5 - 0.07)
-        return 9.5 * (1 - decay) ** 1.4
+        # Steeper decay, gone by 0.42s
+        decay = (t - 0.09) / (0.42 - 0.09)
+        return 7.6 * (1 - decay) ** 1.8
 
 def findSpeedWhileCoast(mass,fArea,cDrag,distanceOfTrack):
     global speeds, distances, pointOfReversal, times
@@ -105,17 +109,17 @@ def findSpeedWhileCoast(mass,fArea,cDrag,distanceOfTrack):
 
     coolTable.tag_configure("highlight", background="#ffb3b3")
     for i in range(0,len(speeds),50):
-        print(f"At {i} milliseconds: speed={speeds[i]:.2f} M/S")
+        #print(f"At {i} milliseconds: speed={speeds[i]:.2f} M/S")
         coolTable.insert("","end",values=(f"{i} milliseconds",f"{distances[i]:.2f} meters (+{distances[i]-distances[i-1]:.3f}m)",f"{speeds[i]:.2f} m/s  ({'+' if speeds[i]>  speeds[i-1] else ''}{speeds[i]-speeds[i-1]:.3f}m/s)"),tags=('highlight',) if speeds[i] < speeds[i-1] and times[i] != 0 else '')
         coolTable.tag_configure("highlight", background="#ffb3b3")
 
 
 
-    print("\n\n\n\n\n")
-    for i in range(0,len(distances),50):
-        print(f"At {i} milliseconds: distance={distances[i]:.2f} M")
-    print(f"\n\nThe car took {len(distances)} milliseconds to complete the track. \nIt's max speed was {max(speeds):.2f} M/S and it's final speed was {speeds[-1]:.2f} M/S")
-    print(f"The car stopped accelerating at {pointOfReversal} milliseconds.")
+    #print("\n\n\n\n\n")
+    #for i in range(0,len(distances),50):
+    #print(f"At {i} milliseconds: distance={distances[i]:.2f} M")
+    #print(f"\n\nThe car took {len(distances)} milliseconds to complete the track. \nIt's max speed was {max(speeds):.2f} M/S and it's final speed was {speeds[-1]:.2f} M/S")
+    #print(f"The car stopped accelerating at {pointOfReversal} milliseconds.")
 
 
 def setVals():
@@ -140,9 +144,9 @@ def setVals():
         findSpeedWhilePowered(fArea,cDrag,mass,timePowered)
         findSpeedWhileCoast(mass,fArea,cDrag,trackDistance)
         btn.config(text="RUN SIMULATION WITH CURRENT SETTINGS\n[STATUS: SUCCEEDED]",fg="green")
-        drawGraphToTurtle(dtScreen,distances,times, "s", "m","DISTANCE-TIME")
-        drawGraphToTurtle(vtScreen,speeds,times, "s", "m/s","VELOCITY-TIME")
-        resultsLabel.config(text=f"RESULTS:\n\nPOINT OF DECELERATION- {pointOfReversal:.2f}ms\nMAX ACHIEVED VELOCITY- {max(speeds):.2f}m/s\nFINAL VELOCITY- {speeds[-1]:.2f}m/s\nTIME TO COMPLETE- {len(times)}ms")
+        drawGraphToTurtle(dtScreen,distances,times, "ms", "m","DISTANCE-TIME")
+        drawGraphToTurtle(vtScreen,speeds,times, "ms", "m/s","VELOCITY-TIME")
+        resultsLabel.config(text=f"RESULTS:\n\nSTARTS DECELERATING- {pointOfReversal:.2f}ms\nMAX VELOCITY- {max(speeds):.2f}m/s\nFINAL VELOCITY- {speeds[-1]:.2f}m/s\nTIME- {len(times)}ms")
         return
     except Exception as e:
         btn.config(text=f"RUN SIMULATION WITH CURRENT SETTINGS\n[STATUS: FAILED ({(type(e).__name__).upper()})",fg='red')
@@ -155,12 +159,12 @@ btn=Button(root,text="RUN SIMULATION WITH CURRENT SETTINGS\n[STATUS: N/A]",backg
 
 thing.append(Label(root,text="Mass (grams):"))
 
-thing.append(Label(root,text="Frontal area (m^2):"))
+thing.append(Label(root,text="Frontal area (m**2):"))
 thing.append(Label(root,text="Drag co-efficient(C-d):"))
 thing.append(Label(root,text="Burn duration (ms):"))
 thing.append(Label(root,text="Track length (meters):"))
 
-resultsLabel=Label(root,text="RESULTS:\n\nPOINT OF DECELERATION- N/A\nMAX ACHIEVED VELOCITY- N/A\nFINAL VELOCITY- N/A\nTIME TO COMPLETE- N/A")
+resultsLabel=Label(root,text="RESULTS:\n\nSTARTS DECELERATING- N/A\nMAX VELOCITY- N/A\nFINAL VELOCITY- N/A\nTIME- N/A",anchor="n")
 
 massEntry=Entry(root)
 massEntry.config(width=8)
@@ -178,6 +182,9 @@ def drawGraphToTurtle(tWindow,indepVar,depVar,unitX,unitY,graphName):
     #   draw axis
     tWindow.clear()
     t=RawTurtle(tWindow)
+    t.hideturtle()
+    t.speed(0)
+    t.penup()
     tWindow.bgcolor('#F0F0F0')
     tWindow.tracer(False)
    
@@ -196,11 +203,12 @@ def drawGraphToTurtle(tWindow,indepVar,depVar,unitX,unitY,graphName):
     
     t.goto(-95,87)
     t.write(f"{mY:.2f}{unitY}\t{graphName}")
-    t.goto(70,-98)
+    t.goto(60,-98)
     t.write(f"{mX:.0f}{unitX}")
     scaleX=200/ mX
     scaleY=200/ mY
     t.color('blue')
+    t.pensize(2)
     #draw graph
     for i in range(len(depVar)):
         
@@ -223,11 +231,11 @@ fAreaEntry.grid(row=2,column=1,sticky="w")
 cDragEntry.grid(row=3,column=1,sticky="w")
 timePoweredEntry.grid(row=4,column=1,sticky="w")
 trackDistanceEntry.grid(row=5,column=1,sticky="w")
-btn.grid(row=6,column=0,sticky='nsew',columnspan='2')
+btn.grid(row=6,column=0,sticky='nsew',columnspan=2)
 root.rowconfigure(7, weight=1)
 root.columnconfigure(1, weight=1)
 coolTable.grid(row=7,column=0,columnspan=2,sticky="nsew")
-resultsLabel.grid(row=7,column=2,sticky="w")
+resultsLabel.grid(row=7,column=2,sticky="n")
 
 
 
@@ -235,6 +243,5 @@ root.mainloop()
 
 
         
-
 
 
