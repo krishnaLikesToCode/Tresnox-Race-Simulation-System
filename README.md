@@ -1,2 +1,4 @@
-# Tresnox-Race-Simulation-System
-This is a program made by Tresnox Racing, 2026 entrants to the STEM Racing UAE competition. This program calculates how long your car will take to finish a certain length of track, and generates D-T and V-T graphs based on the results. 
+# TRSS- Tresnox Race Simulation System 
+#### ℹ️ A GUI program that simulates F1 in Schools races, and provides you with the results
+
+This program was created by Tresnox Racing, STEM Racing UAE 2026 entrants
