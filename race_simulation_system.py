@@ -4,9 +4,9 @@ from turtle import *
 from turtle import RawTurtle, TurtleScreen
 import tkinter.font as tkFont
 
-#print("Please note that time powered is typically 450ms for FiS and STEM RACING")
+#print("Please note that time powered is typically 500ms for FiS and STEM RACING")
 root=Tk()
-root.title("RACE SIMULATION SYSTEM (RSS)")
+root.title("TRESNOX RACE SIMULATION SYSTEM (TRSS)")
 default_font=tkFont.nametofont("TkDefaultFont")
 default_font.configure(family="Orbitron ExtraBold")
 
