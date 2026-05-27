@@ -31,7 +31,7 @@ coolTable.heading("2",text="Distances (m)")
 coolTable.heading("3",text="Velocities (m/s)")
 
 def calcDrag(fArea,cDrag,speed):
-    assumedFriction=0.17 # air res and wheel friction, on the higher side for safety
+    assumedFriction=0.06 # air res and wheel friction, on the higher side for safety
     return (1/2)*1.225*(fArea)*(cDrag)*(speed**2)+assumedFriction
     
 
